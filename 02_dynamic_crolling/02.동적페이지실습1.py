@@ -41,9 +41,12 @@ prev_height = driver.execute_script('return arguments[0].scrollHeight', scrollab
 # 스크롤 동작 확인을 위한 로그 추가
 print(f"초기 페이지 높이: {prev_height}")
 
+# 스크롤 시도 횟수 제한
+max_scroll_attempts = 5
+
 # 마지막이 나타날 때까지 스크롤
 scroll_attempts = 0
-while True:
+while scroll_attempts < max_scroll_attempts:
     scroll_attempts += 1
     # 페이지 끝까지 스크롤
     driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
@@ -74,18 +77,18 @@ while True:
 print("전체 스크롤 완료")
 
 # 페이지 소스 가져오기
-page_source = driver.page_source
+html = BeautifulSoup(driver.page_source, features="html.parser")
+
+# class 정의하여 변수에 넣기
+txt_content = html.find_all(class_ = '.fs-15.fw-6.ellipsis-2.no-margin-top.ion-text-wrap')
+
+txt_list = [i.text for i in txt_content]
+
+# 출력 확인
+for txt in txt_list:
+    print(txt)
 
 # BeautifulSoup으로 파싱
-soup = BeautifulSoup(page_source, 'html.parser')
-
-# 원하는 데이터를 파싱합니다.
-# 예: 제품 목록 추출
-products = soup.find_all('div', class_='product-item')
-print(f"총 찾은 상품 수: {len(products)}")
-for product in products:
-    product_name = product.find('h2', class_='fs-15 fw-6 ellipsis-2 ion-text-wrap').text.strip()
-    print(product_name)
 
 # 브라우저 종료
 driver.quit()

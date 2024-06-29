@@ -1,15 +1,43 @@
 import os
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-import time
 from bs4 import BeautifulSoup
+from pyairtable import Api
+
+# Airtable 설정
+AIRTABLE_API_KEY = 'pat6wyIJ4QYHYY2Yd.55e5bb1a07d8883a8bdfa02a779aed612a0f800c8f252c17a12dac34a4e2347b'
+BASE_ID = 'appINqW1EtwrFL5gp'
+TABLE_NAME = 'tblDDRGv8LbYOTMDd'
+
+# Airtable API 객체 생성 및 테이블 참조
+api = Api(AIRTABLE_API_KEY)
+table = api.table(BASE_ID, TABLE_NAME)
 
 # driver_path에 파일이 있는지 확인
 driver_path = "D:\\projects\\miniu\\chromedriver-win64\\chromedriver.exe"
 if not os.path.exists(driver_path):
     print(f"ChromeDriver가 '{driver_path}' 경로에 존재하지 않습니다. 프로그램을 종료합니다.")
+    exit()
+
+# Airtable 접근 확인 및 샘플 데이터 삽입
+try:
+    sample_data = {
+        "Product Name": "진로 이즈 백 1박스",
+        "Price": 1180000,  # Price를 숫자 형식으로 변경
+        "URL": "https://d3i25w97yl4le9.cloudfront.net/thumb/products/LnwUidPyML9PTyR3mjJnJHvrOuO3MzQhgOXYQVJJ.jpg"
+    }
+    sample_record = table.create(sample_data)
+    print("Airtable에 접근 및 샘플 데이터 삽입 성공")
+    
+    # 2초 후 샘플 데이터 삭제
+    time.sleep(4)
+    table.delete(sample_record['id'])
+    print("샘플 데이터 삭제 성공")
+except Exception as e:
+    print(f"Airtable 접근 또는 샘플 데이터 삽입 중 오류 발생: {e}")
     exit()
 
 # Chrome 옵션 설정
@@ -28,7 +56,6 @@ options.add_experimental_option("prefs", prefs)
 service = Service(driver_path)
 driver = webdriver.Chrome(service=service, options=options)
 
-# 배달K 특정 웹주소 / 다른 주소를 입력하면 다른 매장의 정보를 가져올 수 있음 
 url = "https://www.deliveryk.com/shops/4221/search-products"
 driver.get(url)
 
@@ -77,7 +104,7 @@ def extract_data():
     page_products = []
     for product, price, image_element in zip(products, prices, images):
         product_name = product.get_text(strip=True)
-        price_text = ''.join(filter(str.isdigit, price.get_text(strip=True)))  # 가격에서 숫자만 남기기
+        price_text = int(''.join(filter(str.isdigit, price.get_text(strip=True))))  # 가격을 숫자 형식으로 변환
         image_url = get_image_url(image_element)  # 이미지 URL 추출
         page_products.append((product_name, price_text, image_url))
         all_products.append((product_name, price_text, image_url))
@@ -145,6 +172,17 @@ unique_products = {}
 for product_name, price_text, image_url in all_products:
     if product_name not in unique_products or (unique_products[product_name][1] is None and image_url is not None):
         unique_products[product_name] = (price_text, image_url)
+
+# Airtable에 데이터 추가
+for product_name, (price_text, image_url) in unique_products.items():
+    try:
+        table.create({
+            "Product Name": product_name,
+            "Price": price_text,
+            "URL": image_url
+        })
+    except Exception as e:
+        print(f"Airtable에 데이터를 추가하는 도중 오류 발생: {e}")
 
 # 텍스트 리스트 생성 및 출력
 for idx, (product_name, (price_text, image_url)) in enumerate(unique_products.items(), 1):

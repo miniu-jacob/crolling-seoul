@@ -28,6 +28,7 @@ options.add_experimental_option("prefs", prefs)
 service = Service(driver_path)
 driver = webdriver.Chrome(service=service, options=options)
 
+# 배달K 특정 웹주소 / 다른 주소를 입력하면 다른 매장의 정보를 가져올 수 있음 
 url = "https://www.deliveryk.com/shops/4221/search-products"
 driver.get(url)
 

@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from pyairtable import Api
 
 # Airtable 설정
-AIRTABLE_API_KEY = 'pat6wyIJ4QYHYY2Yd.55e5bb1a07d8883a8bdfa02a779aed612a0f800c8f252c17a12dac34a4e2347b'
+AIRTABLE_API_KEY = 'YOUR API KEY'
 BASE_ID = 'appINqW1EtwrFL5gp'
 TABLE_NAME = 'tblDDRGv8LbYOTMDd'
 
